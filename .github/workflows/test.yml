@@ -24,4 +24,6 @@ jobs:
     - uses: actions/checkout@v1
     - uses: ./
       with:
-        milliseconds: 1000
+        image_name: image_assembly_line/test
+        target: build_image
+        no_push: true

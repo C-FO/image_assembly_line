@@ -4,12 +4,16 @@ NODE_VERSION ?= 12
 build:
 	echo "hello"
 
-build_dev_image:
+test.build_image:
+	docker build -f Dockerfile \
+		-t ${IMAGE_NAME} .
+
+dev.build_image:
 	docker build -f dev.Dockerfile \
 		--build-arg NODE_VERSION=${NODE_VERSION} \
 		-t ${IMAGE_NAME} .
 
-run_all:
+dev.all:
 	docker run --rm \
 		-v ${PWD}/src:/app/src \
 		-v ${PWD}/lib:/app/lib \
@@ -18,7 +22,7 @@ run_all:
 		-t ${IMAGE_NAME}:latest \
 		sh -c 'npm run all'
 
-build_test:
+dev.test:
 	docker run --rm \
 		-v ${PWD}/src:/app/src \
 		-v ${PWD}/lib:/app/lib \
