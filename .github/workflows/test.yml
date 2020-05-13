@@ -10,14 +10,14 @@ on: # rebuild any PRs and main branch changes
 
 jobs:
   build: # make sure build/ci work properly
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v1
     - run: |
-        npm install
-        npm run all
+        make dev.build_image
+        make dev.all
   test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       REGISTRY_NAME: '1234567890.dkr.ecr.ap-northeast-1.amazonaws.com'
     steps:
@@ -25,5 +25,5 @@ jobs:
     - uses: ./
       with:
         image_name: image_assembly_line/test
-        target: build_image
+        target: test.build_image
         no_push: true
