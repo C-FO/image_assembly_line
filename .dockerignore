@@ -7,5 +7,4 @@ log
 node_modules
 tmp
 tools
-src
 dist
