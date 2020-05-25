@@ -27,7 +27,7 @@
   "dependencies": {
     "@actions/core": "^1.2.0",
     "@actions/exec": "^1.0.3",
-    "@slack/bolt": "^2.0.1"
+    "@slack/bolt": "^2.1.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",
