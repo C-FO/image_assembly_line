@@ -957,6 +957,9 @@ exports.ScanError = ScanError;
 class PushError extends BaseError {
 }
 exports.PushError = PushError;
+class NotificationError extends BaseError {
+}
+exports.NotificationError = NotificationError;
 
 
 /***/ }),
