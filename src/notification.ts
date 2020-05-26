@@ -14,9 +14,14 @@ import * as slack from './slack'
  */
 export function notifyImagePushed(): void {
   try {
-    slack.postMessage('')
+    slack.postMessage()
     return
   } catch (e) {
     throw new NotificationError(e)
   }
+}
+
+export async function notifyImageBuildFailed(): Promise<void> {
+  slack.postBuildFailed()
+  return
 }
