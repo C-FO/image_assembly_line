@@ -10,6 +10,9 @@ inputs:
   severity_level:
     description: 'severities of vulnerabilities to be displayed'
     default: 'CRITICAL' # Available values: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL
+  scan_exit_code:
+    description: 'Exit code when vulnerabilities were found'
+    default: '0'
   no_push:
     description: 'set true if you do not want to push image to ECR'
     default: ''

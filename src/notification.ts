@@ -14,7 +14,11 @@ import * as slack from './slack'
  */
 export function notifyImagePushed(): void {
   try {
+<<<<<<< HEAD
     slack.postMessage()
+=======
+    slack.postMessage('')
+>>>>>>> 4efd417434370502695ac080a0f6710dc2bec0b0
     return
   } catch (e) {
     throw new NotificationError(e)

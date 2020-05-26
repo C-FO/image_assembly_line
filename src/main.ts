@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import Docker from './docker'
 import {BuildError, ScanError, PushError} from './error'
+import {setDelivery} from './deliver'
 
 async function run(): Promise<void> {
   try {
@@ -23,6 +24,9 @@ async function run(): Promise<void> {
     const severityLevel = core.getInput('severity_level')
     core.debug(`severity_level: ${severityLevel.toString()}`)
 
+    const scanExitCode = core.getInput('scan_exit_code')
+    core.debug(`scan_exit_code: ${scanExitCode.toString()}`)
+
     const noPush = core.getInput('no_push')
     core.debug(`no_push: ${noPush.toString()}`)
 
@@ -31,12 +35,19 @@ async function run(): Promise<void> {
 
     await docker.build(target)
 
-    await docker.scan(severityLevel)
+    await docker.scan(severityLevel, scanExitCode)
 
     if (noPush.toString() === 'true') {
       core.info('no_push: true')
     } else {
       await docker.push()
+    }
+
+    if (docker.builtImage && process.env.GITHUB_RUN_ID) {
+      await setDelivery({
+        dockerImage: docker.builtImage,
+        gitHubRunID: process.env.GITHUB_RUN_ID
+      })
     }
   } catch (e) {
     if (e instanceof BuildError) {

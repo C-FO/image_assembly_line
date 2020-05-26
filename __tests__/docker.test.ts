@@ -63,19 +63,19 @@ describe('Docker#scan()', () => {
 
   test('scan passed', async () => {
     jest.spyOn(exec, 'exec').mockResolvedValueOnce(0)
-    const result = await docker.scan('CRITICAL')
+    const result = await docker.scan('CRITICAL', '0')
     expect(result).toEqual(0)
   })
 
   test('scan passed', async () => {
     jest.spyOn(exec, 'exec').mockResolvedValueOnce(0)
-    const result = await docker.scan('HIGH')
+    const result = await docker.scan('HIGH', '0')
     expect(result).toEqual(0)
   })
 
   test('scan failed', async () => {
     jest.spyOn(exec, 'exec').mockResolvedValueOnce(1)
-    const result = await docker.scan('CRITICAL')
+    const result = await docker.scan('CRITICAL', '1')
     expect(result).toEqual(1)
   })
 })
