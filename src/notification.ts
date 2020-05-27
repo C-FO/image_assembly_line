@@ -1,5 +1,5 @@
 import {NotificationError} from './error'
-import * as slack from './slack'
+// import * as slack from './slack'
 
 /**
  * image の push が終わったらそれについて notification を行う
@@ -14,18 +14,15 @@ import * as slack from './slack'
  */
 export function notifyImagePushed(): void {
   try {
-<<<<<<< HEAD
-    slack.postMessage()
-=======
-    slack.postMessage('')
->>>>>>> 4efd417434370502695ac080a0f6710dc2bec0b0
+    // slack.postMessage()
     return
+    // eslint-disable-next-line no-unreachable
   } catch (e) {
     throw new NotificationError(e)
   }
 }
 
 export async function notifyImageBuildFailed(): Promise<void> {
-  slack.postBuildFailed()
+  // slack.postBuildFailed()
   return
 }

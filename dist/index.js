@@ -964,6 +964,56 @@ exports.NotificationError = NotificationError;
 
 /***/ }),
 
+/***/ 62:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const error_1 = __webpack_require__(25);
+// import * as slack from './slack'
+/**
+ * image の push が終わったらそれについて notification を行う
+ * まずは slack への通知を想定するが、Workflow によって issue を作るなど動作を変更可能にする
+ * usage:
+ * ```
+ * import * as notification from './notification'
+ * notification.notityImagePushed()
+ * ```
+ *
+ * notification が失敗すると業務的に困るので error を throw する
+ */
+function notifyImagePushed() {
+    try {
+        // slack.postMessage()
+        return;
+        // eslint-disable-next-line no-unreachable
+    }
+    catch (e) {
+        throw new error_1.NotificationError(e);
+    }
+}
+exports.notifyImagePushed = notifyImagePushed;
+function notifyImageBuildFailed() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // slack.postBuildFailed()
+        return;
+    });
+}
+exports.notifyImageBuildFailed = notifyImageBuildFailed;
+
+
+/***/ }),
+
 /***/ 87:
 /***/ (function(module) {
 
@@ -1092,6 +1142,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
+const notification = __importStar(__webpack_require__(62));
 const docker_util_1 = __webpack_require__(708);
 const error_1 = __webpack_require__(25);
 // import {spawnSync, SpawnSyncReturns} from 'child_process'
@@ -1125,6 +1176,7 @@ class Docker {
             }
             catch (e) {
                 core.debug('build() error');
+                notification.notifyImageBuildFailed();
                 throw new error_1.BuildError(e);
             }
         });

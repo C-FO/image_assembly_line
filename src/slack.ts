@@ -1,5 +1,3 @@
-import {App} from '@slack/bolt'
-import * as core from '@actions/core'
 import * as api from '@slack/web-api'
 import * as types from '@slack/types'
 import {Repository} from './types'
@@ -17,7 +15,9 @@ enum Channel {
 }
 
 export async function postBuildFailed(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   repository: Repository,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   actionID: string
 ): Promise<void> {
   const attachments = {color: Color.Danger} as types.MessageAttachment
