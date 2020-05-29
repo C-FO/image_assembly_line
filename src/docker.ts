@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as im from '@actions/exec/lib/interfaces'
-import * as notification from './notification'
 import {latestBuiltImage, noBuiltImage, imageTag} from './docker-util'
 import {BuildError, ScanError, PushError} from './error'
 
@@ -43,7 +42,6 @@ export default class Docker {
       return this.update()
     } catch (e) {
       core.debug('build() error')
-      notification.notifyImageBuildFailed()
       throw new BuildError(e)
     }
   }

@@ -44,6 +44,7 @@
     "ts-jest": "^24.2.0",
     "typescript": "^3.6.4",
     "minimist": "^0.2.1",
-    "kind-of": "^6.0.3"
+    "kind-of": "^6.0.3",
+    "dotenv": "^8.2.0"
   }
 }

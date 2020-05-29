@@ -1,17 +1,12 @@
 import * as api from '@slack/web-api'
 import * as types from '@slack/types'
-import {Repository} from './types'
-import {} from '@slack/web-api/dist/methods'
+import {Repository, VulnerabilityIssue} from './types'
+import * as core from '@actions/core'
 
 const client = new api.WebClient(process.env.SLACK_BOT_TOKEN)
 enum Color {
   Danger = 'danger',
   Good = 'good'
-}
-
-enum Channel {
-  CICD_CONTAINERS_DEV = 'CUSLUDWS2',
-  CONTAINERS_NOTIFICATION = 'CTM72DVCJ'
 }
 
 export async function postBuildFailed(
@@ -24,13 +19,28 @@ export async function postBuildFailed(
   exports.postMessage('ビルドに失敗しました', attachments)
 }
 
-export async function postMessage(
-  message: string,
-  attachments: types.MessageAttachment[]
+export async function postVulnerability(
+  issue: VulnerabilityIssue
 ): Promise<void> {
-  client.chat.postMessage({
-    channel: Channel.CONTAINERS_NOTIFICATION,
+  if (!process.env.SLACK_TRIVY_ALERT) {
+    throw new Error('No Channel to post.')
+  }
+  const channel: string = process.env.SLACK_TRIVY_ALERT
+  core.debug(issue.name)
+  postMessage(channel, 'Security Issue が発生しました', [{}])
+}
+
+export async function postMessage(
+  channel: string,
+  message: string,
+  attachments?: types.MessageAttachment[]
+): Promise<api.WebAPICallResult> {
+  const args = {
+    channel,
     text: message,
+    mrkdwn: true,
     attachments
-  })
+  } as api.ChatPostMessageArguments
+
+  return client.chat.postMessage(args)
 }
