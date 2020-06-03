@@ -1,5 +1,6 @@
 import * as slack from '../src/slack'
 import * as types from '@slack/types'
+import {BuildAction} from '../src/types'
 
 if (!process.env.SLACK_CICD_NOTIFICATION_TEST) {
   throw new Error('')
@@ -33,5 +34,24 @@ describe('postMessage', () => {
     const message = result.message as any
     expect(result.ok).toBe(true)
     expect(message.attachments).toHaveLength(1)
+  })
+})
+
+describe('postBuildFailed()', () => {
+  test('post message with attachment', async () => {
+    const build = new BuildAction({
+      repository: 'C-FO/image_assembly_line',
+      workflow: 'workflow1',
+      commitSHA: '123acf98',
+      runID: '987654321'
+    })
+
+    const result = await slack.postBuildFailed(build)
+    expect(result.ok).toBe(true)
+
+    const message = result.message as any
+    expect(message.text).toBe(
+      `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`
+    )
   })
 })

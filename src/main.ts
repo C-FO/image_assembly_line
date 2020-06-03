@@ -2,8 +2,17 @@ import * as core from '@actions/core'
 import Docker from './docker'
 import {BuildError, ScanError, PushError} from './error'
 import {setDelivery} from './deliver'
+import * as notification from './notification'
+import {BuildAction} from './types'
 
 async function run(): Promise<void> {
+  const thisAction = new BuildAction({
+    repository: process.env.GITHUB_REPOSITORY,
+    workflow: process.env.GITHUB_WORKFLOW,
+    commitSHA: process.env.GITHUB_SHA,
+    runID: process.env.GITHUB_RUN_ID
+  })
+
   try {
     // REGISTRY_NAME はユーザー側から渡せない様にする
     const registry: string | undefined = process.env.REGISTRY_NAME
@@ -52,6 +61,7 @@ async function run(): Promise<void> {
   } catch (e) {
     if (e instanceof BuildError) {
       core.error('image build error')
+      notification.notifyBuildFailed(thisAction)
     } else if (e instanceof ScanError) {
       core.error('image scan error')
     } else if (e instanceof PushError) {

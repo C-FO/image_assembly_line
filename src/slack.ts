@@ -1,22 +1,39 @@
 import * as api from '@slack/web-api'
 import * as types from '@slack/types'
-import {Repository, VulnerabilityIssue} from './types'
+import {BuildAction, VulnerabilityIssue} from './types'
 import * as core from '@actions/core'
 
 const client = new api.WebClient(process.env.SLACK_BOT_TOKEN)
 enum Color {
-  Danger = 'danger',
+  Danger = '#b22222',
   Good = 'good'
 }
 
 export async function postBuildFailed(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  repository: Repository,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  actionID: string
-): Promise<void> {
-  const attachments = {color: Color.Danger} as types.MessageAttachment
-  exports.postMessage('ビルドに失敗しました', attachments)
+  build: BuildAction
+): Promise<api.WebAPICallResult> {
+  const attachments = [failedAttachment(build)]
+  const channel = process.env.SLACK_CICD_NOTIFICATION_TEST
+  return exports.postMessage(
+    channel,
+    `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`,
+    attachments
+  )
+}
+
+function failedAttachment(build: BuildAction): types.MessageAttachment {
+  const repositoryBlock: types.SectionBlock = {
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: `*Action:* <${build.runURL}|${build.repository}>\n*Workflow:* ${build.workflow}\n`
+    }
+  }
+
+  return {
+    color: Color.Danger,
+    blocks: [repositoryBlock]
+  }
 }
 
 export async function postVulnerability(
@@ -35,12 +52,12 @@ export async function postMessage(
   message: string,
   attachments?: types.MessageAttachment[]
 ): Promise<api.WebAPICallResult> {
-  const args = {
+  const args: api.ChatPostMessageArguments = {
     channel,
     text: message,
     mrkdwn: true,
     attachments
-  } as api.ChatPostMessageArguments
+  }
 
   return client.chat.postMessage(args)
 }
