@@ -13,7 +13,7 @@ export async function postBuildFailed(
   build: BuildAction
 ): Promise<api.WebAPICallResult> {
   const attachments = [failedAttachment(build)]
-  const channel = process.env.SLACK_CICD_NOTIFICATION_TEST
+  const channel = process.env.SLACK_CONTAINERS_NOTIFICATION
   return exports.postMessage(
     channel,
     `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`,
@@ -21,7 +21,7 @@ export async function postBuildFailed(
   )
 }
 
-function failedAttachment(build: BuildAction): types.MessageAttachment {
+export function failedAttachment(build: BuildAction): types.MessageAttachment {
   const repositoryBlock: types.SectionBlock = {
     type: 'section',
     text: {

@@ -5036,7 +5036,7 @@ var Color;
 function postBuildFailed(build) {
     return __awaiter(this, void 0, void 0, function* () {
         const attachments = [failedAttachment(build)];
-        const channel = process.env.SLACK_CICD_NOTIFICATION_TEST;
+        const channel = process.env.SLACK_CONTAINERS_NOTIFICATION;
         return exports.postMessage(channel, `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`, attachments);
     });
 }
@@ -5054,6 +5054,7 @@ function failedAttachment(build) {
         blocks: [repositoryBlock]
     };
 }
+exports.failedAttachment = failedAttachment;
 function postVulnerability(issue) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!process.env.SLACK_TRIVY_ALERT) {

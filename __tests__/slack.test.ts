@@ -2,10 +2,14 @@ import * as slack from '../src/slack'
 import * as types from '@slack/types'
 import {BuildAction} from '../src/types'
 
-if (!process.env.SLACK_CICD_NOTIFICATION_TEST) {
-  throw new Error('')
+if (
+  !process.env.SLACK_CICD_NOTIFICATION_TEST ||
+  !process.env.SLACK_CONTAINERS_NOTIFICATION
+) {
+  throw new Error('Slack channel not set')
 }
 const channel = process.env.SLACK_CICD_NOTIFICATION_TEST
+const notificationChannel = process.env.SLACK_CONTAINERS_NOTIFICATION
 
 describe('postMessage', () => {
   test('post simple message', async () => {
@@ -45,13 +49,26 @@ describe('postBuildFailed()', () => {
       commitSHA: '123acf98',
       runID: '987654321'
     })
-
+    const failedMessage = `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`
+    const postMessage = jest
+      .spyOn(slack, 'postMessage')
+      .mockImplementation(() =>
+        Promise.resolve({
+          ok: true,
+          message: {
+            text: failedMessage
+          }
+        })
+      )
     const result = await slack.postBuildFailed(build)
+    expect(postMessage).toHaveBeenCalledWith(
+      notificationChannel,
+      failedMessage,
+      [slack.failedAttachment(build)]
+    )
     expect(result.ok).toBe(true)
 
     const message = result.message as any
-    expect(message.text).toBe(
-      `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`
-    )
+    expect(message.text).toBe(failedMessage)
   })
 })
