@@ -50,16 +50,13 @@ describe('postBuildFailed()', () => {
       runID: '987654321'
     })
     const failedMessage = `<${build.githubRepositoryURL}|${build.repository}> のビルドに失敗しました`
-    const postMessage = jest
-      .spyOn(slack, 'postMessage')
-      .mockImplementation(() =>
-        Promise.resolve({
-          ok: true,
-          message: {
-            text: failedMessage
-          }
-        })
-      )
+    const postMessage = jest.spyOn(slack, 'postMessage').mockResolvedValueOnce({
+      ok: true,
+      message: {
+        text: failedMessage
+      }
+    })
+
     const result = await slack.postBuildFailed(build)
     expect(postMessage).toHaveBeenCalledWith(
       notificationChannel,
