@@ -6,18 +6,12 @@ export interface Repository {
   url: string
 }
 
-export interface VulnerabilityIssue {
-  level: string
-  name: string
-  cve: string
-}
-
 export interface Vulnerability {
   Target: string
   Vulnerabilities: CVE[] | null
 }
 
-interface CVE {
+export interface CVE {
   VulnerabilityID: string
   PkgName: string
   InstalledVersion: string

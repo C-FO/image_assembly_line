@@ -1,12 +1,20 @@
+import {Vulnerability, BuildAction} from './types'
 import {NotificationError} from './error'
 import * as slack from './slack'
-import {BuildAction} from './types'
 
-export function notifyVulnerability(): void {
+export function notifyVulnerability(
+  imageName: string,
+  vulnerabilities: Vulnerability[]
+): void {
   try {
-    // slack.postMessage()
+    for (const result of vulnerabilities) {
+      if (result.Vulnerabilities != null) {
+        for (const vulnerability of result.Vulnerabilities) {
+          slack.postVulnerability(imageName, result.Target, vulnerability)
+        }
+      }
+    }
     return
-    // eslint-disable-next-line no-unreachable
   } catch (e) {
     throw new NotificationError(e)
   }

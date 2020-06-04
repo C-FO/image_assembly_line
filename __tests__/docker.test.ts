@@ -2,18 +2,21 @@ import Docker from '../src/docker'
 import * as dockerUtil from '../src/docker-util'
 import * as exec from '@actions/exec'
 
+const commitHash = '869e3295e921af04e150efb1521d318ce99e353c'
+
 describe('constructor', () => {
-  test('registry and imageName is given', async () => {
+  test('registry and imageName, commitHash are given', async () => {
     const docker = new Docker(
       '1234567890.dkr.ecr.ap-northeast-1.amazonaws.com',
-      'imagename/app'
+      'imagename/app',
+      commitHash
     )
     expect(docker).toBeInstanceOf(Docker)
   })
 
   test('registry is empty', () => {
     expect(() => {
-      new Docker('', 'imagename/app')
+      new Docker('', 'imagename/app', commitHash)
     }).toThrowError()
   })
 })
@@ -21,7 +24,8 @@ describe('constructor', () => {
 describe('Docker#build()', () => {
   const docker = new Docker(
     '1234567890.dkr.ecr.ap-northeast-1.amazonaws.com/',
-    'imagename/app'
+    'imagename/app',
+    commitHash
   )
 
   test('build', async () => {
@@ -35,7 +39,7 @@ describe('Docker#build()', () => {
     expect(result).toEqual({
       imageID: '1234567890',
       imageName: 'build-image/debug',
-      tags: ['latest']
+      tags: ['latest', commitHash]
     })
   })
 
@@ -48,7 +52,8 @@ describe('Docker#build()', () => {
 describe('Docker#scan()', () => {
   const docker = new Docker(
     '1234567890.dkr.ecr.ap-northeast-1.amazonaws.com/',
-    'imagename/app'
+    'imagename/app',
+    commitHash
   )
 
   beforeAll(async () => {

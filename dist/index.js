@@ -1356,6 +1356,41 @@ module.exports = {"_from":"@slack/web-api@^5.8.0","_id":"@slack/web-api@5.9.0","
 
 /***/ }),
 
+/***/ 61:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+function setDelivery(delivery) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.setOutput('built_image_name', delivery.dockerImage.imageName);
+        core.setOutput('built_image_id', delivery.dockerImage.imageID);
+        core.setOutput('git_hub_run_id', delivery.gitHubRunID);
+    });
+}
+exports.setDelivery = setDelivery;
+
+
+/***/ }),
+
 /***/ 62:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -1380,11 +1415,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const error_1 = __webpack_require__(25);
 const slack = __importStar(__webpack_require__(570));
-function notifyVulnerability() {
+function notifyVulnerability(imageName, vulnerabilities) {
     try {
-        // slack.postMessage()
+        for (const result of vulnerabilities) {
+            if (result.Vulnerabilities != null) {
+                for (const vulnerability of result.Vulnerabilities) {
+                    slack.postVulnerability(imageName, result.Target, vulnerability);
+                }
+            }
+        }
         return;
-        // eslint-disable-next-line no-unreachable
     }
     catch (e) {
         throw new error_1.NotificationError(e);
@@ -2333,7 +2373,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const docker_1 = __importDefault(__webpack_require__(231));
 const error_1 = __webpack_require__(25);
-const deliver_1 = __webpack_require__(852);
+const deliver_1 = __webpack_require__(61);
 const notification = __importStar(__webpack_require__(62));
 const types_1 = __webpack_require__(251);
 function run() {
@@ -2358,13 +2398,18 @@ function run() {
             core.debug(`target: ${target}`);
             const imageName = core.getInput('image_name');
             core.debug(`image_name: ${imageName}`);
+            if (!process.env.GITHUB_SHA) {
+                throw new Error('GITHUB_SHA not found.');
+            }
+            const commitHash = process.env.GITHUB_SHA;
+            core.debug(`commit_hash: ${commitHash}`);
             const severityLevel = core.getInput('severity_level');
             core.debug(`severity_level: ${severityLevel.toString()}`);
             const scanExitCode = core.getInput('scan_exit_code');
             core.debug(`scan_exit_code: ${scanExitCode.toString()}`);
             const noPush = core.getInput('no_push');
             core.debug(`no_push: ${noPush.toString()}`);
-            const docker = new docker_1.default(registry, imageName);
+            const docker = new docker_1.default(registry, imageName, commitHash);
             core.debug(`docker: ${docker.toString()}`);
             yield docker.build(target);
             yield docker.scan(severityLevel, scanExitCode);
@@ -2625,9 +2670,9 @@ const core = __importStar(__webpack_require__(470));
 const exec = __importStar(__webpack_require__(986));
 const docker_util_1 = __webpack_require__(708);
 const error_1 = __webpack_require__(25);
-// import {spawnSync, SpawnSyncReturns} from 'child_process'
+const notification_1 = __webpack_require__(62);
 class Docker {
-    constructor(registry, imageName) {
+    constructor(registry, imageName, commitHash) {
         if (!registry) {
             throw new Error('registry is empty');
         }
@@ -2637,6 +2682,7 @@ class Docker {
         // remove the last '/'
         this.registry = sanitizedDomain(registry);
         this.imageName = imageName;
+        this.commitHash = commitHash;
     }
     get builtImage() {
         return this._builtImage;
@@ -2669,7 +2715,7 @@ class Docker {
                 if (!severityLevel.includes('CRITICAL')) {
                     severityLevel = `CRITICAL,${severityLevel}`;
                 }
-                let trivyScanReport = '{}';
+                let trivyScanReport = '[]';
                 const options = {
                     silent: true,
                     listeners: {
@@ -2678,6 +2724,7 @@ class Docker {
                         }
                     }
                 };
+                const imageName = `${this._builtImage.imageName}:${this._builtImage.tags[0]}`;
                 const result = yield exec.exec('trivy', [
                     '--light',
                     '--no-progress',
@@ -2688,11 +2735,11 @@ class Docker {
                     scanExitCode,
                     '--severity',
                     severityLevel,
-                    `${this._builtImage.imageName}:${this._builtImage.tags[0]}`
+                    imageName
                 ], options);
                 const vulnerabilities = JSON.parse(trivyScanReport);
                 if (vulnerabilities.length > 0) {
-                    core.debug(`Target: ${vulnerabilities[0].Target}`); // ToDo
+                    notification_1.notifyVulnerability(imageName, vulnerabilities);
                 }
                 return result;
             }
@@ -2780,6 +2827,7 @@ class Docker {
     update() {
         return __awaiter(this, void 0, void 0, function* () {
             this._builtImage = yield docker_util_1.latestBuiltImage(this.imageName);
+            this._builtImage.tags.push(this.commitHash);
             core.debug(this._builtImage.toString());
             return this._builtImage;
         });
@@ -3844,7 +3892,7 @@ function escape(s) {
  * @private
  */
 
-var db = __webpack_require__(972)
+var db = __webpack_require__(852)
 var extname = __webpack_require__(622).extname
 
 /**
@@ -5055,14 +5103,55 @@ function failedAttachment(build) {
     };
 }
 exports.failedAttachment = failedAttachment;
-function postVulnerability(issue) {
+function postVulnerability(imageName, target, cve) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!process.env.SLACK_TRIVY_ALERT) {
-            throw new Error('No Channel to post.');
+            throw new Error('No channel to post.');
         }
         const channel = process.env.SLACK_TRIVY_ALERT;
-        core.debug(issue.name);
-        postMessage(channel, 'Security Issue が発生しました', [{}]);
+        core.debug(`Channel: ${channel}`);
+        const attachment = {
+            color: Color.Danger,
+            fields: [
+                {
+                    title: 'Image Name',
+                    value: imageName,
+                    short: true
+                },
+                {
+                    title: 'Target',
+                    value: target,
+                    short: true
+                },
+                {
+                    title: 'Package Name',
+                    value: cve.PkgName,
+                    short: true
+                },
+                {
+                    title: 'CVE',
+                    value: cve.VulnerabilityID,
+                    short: true
+                },
+                {
+                    title: 'Severity',
+                    value: cve.Severity,
+                    short: true
+                },
+                {
+                    title: 'Installed Version',
+                    value: `"${cve.InstalledVersion}"`,
+                    short: true
+                },
+                {
+                    title: 'Fixed Version',
+                    value: `"${cve.FixedVersion}"`,
+                    short: true
+                }
+            ]
+        };
+        const message = 'ビルドされた Docker イメージに脆弱性が見つかりました。';
+        return postMessage(channel, message, [attachment]);
     });
 }
 exports.postVulnerability = postVulnerability;
@@ -7181,36 +7270,19 @@ exports.getLogger = getLogger;
 /***/ }),
 
 /***/ 852:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-"use strict";
+/*!
+ * mime-db
+ * Copyright(c) 2014 Jonathan Ong
+ * MIT Licensed
+ */
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-function setDelivery(delivery) {
-    return __awaiter(this, void 0, void 0, function* () {
-        core.setOutput('built_image_name', delivery.dockerImage.imageName);
-        core.setOutput('built_image_id', delivery.dockerImage.imageID);
-        core.setOutput('git_hub_run_id', delivery.gitHubRunID);
-    });
-}
-exports.setDelivery = setDelivery;
+/**
+ * Module exports.
+ */
+
+module.exports = __webpack_require__(512)
 
 
 /***/ }),
@@ -8850,24 +8922,6 @@ function warnDeprecations(method, logger) {
     }
 }
 //# sourceMappingURL=WebClient.js.map
-
-/***/ }),
-
-/***/ 972:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-/*!
- * mime-db
- * Copyright(c) 2014 Jonathan Ong
- * MIT Licensed
- */
-
-/**
- * Module exports.
- */
-
-module.exports = __webpack_require__(512)
-
 
 /***/ }),
 
