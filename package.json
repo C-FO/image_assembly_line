@@ -30,6 +30,7 @@
     "@slack/bolt": "^2.1.0",
     "@types/uuid": "^8.0.0",
     "aws-sdk": "^2.690.0",
+    "axios": "^0.19.2",
     "uuid": "^8.1.0"
   },
   "devDependencies": {

@@ -1,36 +1,24 @@
 import {DockerImage} from './docker'
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
-
-enum DockerFormat {
-  repository = 0,
-  tag = 1,
-  id = 2
-}
+import axios from 'axios'
 
 export async function latestBuiltImage(
   imageName: string
 ): Promise<DockerImage> {
   core.debug('latestBuiltImage()')
-  const imageLines = await exports.imageLs(imageName)
-  if (imageLines.length < 1) {
+  const images = await exports.dockerImageLs(imageName)
+  if (images.length < 1) {
     throw new Error('No images built')
   }
 
-  let builtImageName = ''
-  let builtImageID = ''
+  const latestImage = images[0]
 
+  const builtImageName = latestImage.RepoTags[0].split(':')[0]
+  const builtImageID = latestImage.Id
   const tags = []
-  for (const imageLineStr of imageLines) {
-    const imageLine = imageLineStr.split(',')
-    if (!builtImageName && !builtImageID) {
-      builtImageName = imageLine[DockerFormat.repository]
-      builtImageID = imageLine[DockerFormat.id]
-    } else if (builtImageID !== imageLine[DockerFormat.id]) {
-      break
-    }
-
-    tags.push(imageLine[DockerFormat.tag])
+  for (const repoTag of latestImage.RepoTags) {
+    tags.push(repoTag.split(':').pop())
   }
 
   return {
@@ -38,27 +26,6 @@ export async function latestBuiltImage(
     imageID: builtImageID,
     tags
   }
-}
-
-export async function imageLs(imageName: string): Promise<string[]> {
-  core.debug(`imageLs(): ${imageName}`)
-  let stdout = ''
-  await exec.exec(
-    'docker',
-    ['image', 'ls', `--format`, '{{.Repository}},{{.Tag}},{{.ID}}'],
-    {
-      listeners: {
-        stdout: (data: Buffer) => {
-          stdout += data.toString()
-        }
-      }
-    }
-  )
-  const result = stdout
-    .split('\n')
-    .filter(line => line.startsWith(`${imageName},`))
-  core.debug(`filtered: ${result.toString()}`)
-  return result
 }
 
 // Return true when check is OK
@@ -82,9 +49,32 @@ export async function noBuiltImage(): Promise<boolean> {
 export async function imageTag(source: string, target: string): Promise<void> {
   await exec.exec('docker', ['image', 'tag', source, target])
 
-  let result: string[]
+  let result: DockerEngineImageResponse[]
   do {
-    result = await imageLs(target.split(':')[0])
+    result = await dockerImageLs(target)
     core.debug(`count: ${result.length.toString()}`)
   } while (result.length < 0)
+}
+
+export async function dockerImageLs(
+  imageName: string
+): Promise<DockerEngineImageResponse[]> {
+  // Document for docker engine API.
+  // https://docs.docker.com/engine/api/v1.39/
+  const res = await axios.get('http:/v1.39/images/json', {
+    params: {filter: imageName},
+    socketPath: '/var/run/docker.sock'
+  })
+
+  // Make sure that images are sorted by "Created" desc.
+  return (res.data as DockerEngineImageResponse[]).sort((im1, im2) => {
+    return im2.Created - im1.Created
+  })
+}
+
+interface DockerEngineImageResponse {
+  Id: string
+  RepoTags: string[]
+  Created: number
+  [key1: string]: string | string[] | number
 }
