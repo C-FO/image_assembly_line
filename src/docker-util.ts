@@ -76,6 +76,18 @@ export async function dockerImageTag(
   } while (result.length < 0)
 }
 
+export async function dockerPush(registry: string, tag: string): Promise<void> {
+  try {
+    const res = await axiosInstance.post(
+      `images/${registry}/push`,
+      qs.stringify({tag})
+    )
+    core.debug(res.data)
+  } catch (e) {
+    core.error(e)
+  }
+}
+
 export async function dockerImageLs(
   imageName: string
 ): Promise<DockerEngineImageResponse[]> {

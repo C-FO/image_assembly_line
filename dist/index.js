@@ -7986,7 +7986,8 @@ class Docker {
                 yield this.login();
                 const registry = this.upstreamRepository();
                 docker_util_1.dockerImageTag(this._builtImage.imageID, registry, tag);
-                return exec.exec('docker', ['image', 'push', `${registry}:${tag}`]);
+                docker_util_1.dockerPush(registry, tag);
+                return 0;
             }
             catch (e) {
                 core.error('push() error');
@@ -20858,6 +20859,18 @@ function dockerImageTag(imageId, repository, newTag) {
     });
 }
 exports.dockerImageTag = dockerImageTag;
+function dockerPush(registry, tag) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield exports.axiosInstance.post(`images/${registry}/push`, qs_1.default.stringify({ tag }));
+            core.debug(res.data);
+        }
+        catch (e) {
+            core.error(e);
+        }
+    });
+}
+exports.dockerPush = dockerPush;
 function dockerImageLs(imageName) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield exports.axiosInstance.get('images/json', {
