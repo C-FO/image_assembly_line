@@ -7578,8 +7578,8 @@ function run() {
         const commitHash = env.GITHUB_SHA;
         const gitHubRunID = env.GITHUB_RUN_ID;
         const containerkojoEnv = env.CONTAINERKOJO_ENV;
-        const actionID = env.GITHUB_ACTION;
-        core.debug(`actionID: ${actionID}`);
+        const runNumber = env.GITHUB_RUN_NUMBER;
+        core.debug(`runNumber: ${runNumber}`);
         const thisAction = new types_1.BuildAction({
             repository: gitHubRepo,
             workflow: gitHubWorkflow,
@@ -7601,7 +7601,7 @@ function run() {
                     workflow: gitHubWorkflow,
                     commitSHA: commitHash,
                     runID: gitHubRunID,
-                    URL: `https://github.com/${gitHubRepo}/runs/${actionID}`
+                    URL: `https://github.com/${gitHubRepo}/runs/${runNumber}`
                 }
             }
         });

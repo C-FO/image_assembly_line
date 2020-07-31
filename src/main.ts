@@ -14,8 +14,8 @@ async function run(): Promise<void> {
   const commitHash = env.GITHUB_SHA
   const gitHubRunID = env.GITHUB_RUN_ID
   const containerkojoEnv = env.CONTAINERKOJO_ENV
-  const actionID = env.GITHUB_ACTION
-  core.debug(`actionID: ${actionID}`)
+  const runNumber = env.GITHUB_RUN_NUMBER
+  core.debug(`runNumber: ${runNumber}`)
 
   const thisAction = new BuildAction({
     repository: gitHubRepo,
@@ -39,7 +39,7 @@ async function run(): Promise<void> {
         workflow: gitHubWorkflow,
         commitSHA: commitHash,
         runID: gitHubRunID,
-        URL: `https://github.com/${gitHubRepo}/runs/${actionID}`
+        URL: `https://github.com/${gitHubRepo}/runs/${runNumber}`
       }
     }
   })
